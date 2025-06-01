@@ -173,12 +173,12 @@
     plane.receiveShadow = true;
     scene.add(plane);
 
-    const wallGeometry = new THREE.PlaneGeometry(50, 50);
-    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
-    const wall = new THREE.Mesh(wallGeometry, wallMaterial);
-    wall.position.set(10, 0, 0);      // Move it to the right
-    wall.rotation.y = -Math.PI / 2;   // Turn it to face left
-    wall.receiveShadow = true;
+    // const wallGeometry = new THREE.PlaneGeometry(50, 50);
+    // const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+    // const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+    // wall.position.set(10, 0, 0);      // Move it to the right
+    // wall.rotation.y = -Math.PI / 2;   // Turn it to face left
+    // wall.receiveShadow = true;
     // scene.add(wall);
 
     const gltfLoader = new GLTFLoader();

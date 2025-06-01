@@ -18,6 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
+  <button id="toggleTime" style="position:absolute;top:20px;left:20px;z-index:1;padding:10px;font-size:16px;">
+    Toggle Day/Night
+  </button>
   <script type="module">
     const clock = new THREE.Clock();
 
@@ -25,8 +28,23 @@
     import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
     import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
     import { FlyControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/FlyControls.js';
+    import { CubeTextureLoader } from 'three';
 
     const scene = new THREE.Scene();
+
+    const loaderCube = new THREE.CubeTextureLoader();
+    const skyboxUrls = [
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/posx.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/negx.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/posy.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/negy.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/posz.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/negz.jpg',
+    ];
+
+
+    const skybox = loaderCube.load(skyboxUrls);
+    scene.background = skybox;
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 8;
@@ -61,7 +79,7 @@
     const ambient = new THREE.AmbientLight(0x404040, 0.5);
     scene.add(ambient);
 
-    // PointLight: emits light in all directions from a point
+    // PointLight
     const pointLight = new THREE.PointLight(0xffaa00, 1, 100);
     // pointLight.position.set(-3, 2, 1.4);
     pointLight.position.set(3.5, 0, 0);
@@ -69,10 +87,10 @@
     scene.add(pointLight);
     
 
-    // SpotLight: emits a cone of light
+    // SpotLight
     const spotLight = new THREE.SpotLight(0x00aaff, 1);
     // spotLight.position.set(-5, 8, 5);
-    spotLight.position.set(-6.5, 0, 0);
+    spotLight.position.set(2.4, 0, 6);
     spotLight.intensity = 2;
     spotLight.angle = Math.PI / 4;
     spotLight.penumbra = 0.5;
@@ -81,18 +99,28 @@
     spotLight.castShadow = true;
     scene.add(spotLight);
 
+    const markerGeometry = new THREE.SphereGeometry(0.2, 16, 16);
+    const markerMaterial = new THREE.MeshBasicMaterial({ color: 0x00aaff, emissive: 0x00aaff });
+    const spotlightMarker = new THREE.Mesh(markerGeometry, markerMaterial);
+    spotlightMarker.position.copy(spotLight.position);
+    scene.add(spotlightMarker);
+
+    const spotTarget = new THREE.Object3D();
+    spotTarget.position.set(0, 0, 6)  
+    scene.add(spotTarget);
+    spotLight.target = spotTarget;
+
     // spotLight.position.copy(camera.position);
     // spotLight.target.position.set(0, 0, 0);
     // scene.add(spotLight.target);
 
-    // HemisphereLight: simulates indirect light from the sky and ground
     const hemiLight = new THREE.HemisphereLight(0xaaaaaa, 0x444444, 0.5);
-    hemiLight.position.set(0, 10, 0);
-    // scene.add(hemiLight);
+    hemiLight.position.set(0, 12, 0);
+    scene.add(hemiLight);
 
     scene.add(new THREE.PointLightHelper(pointLight, 0.5));
     // scene.add(new THREE.SpotLightHelper(spotLight));
-    // scene.add(new THREE.HemisphereLightHelper(hemiLight, 1));
+    scene.add(new THREE.HemisphereLightHelper(hemiLight, 1));
 
 
     const geometry = new THREE.BoxGeometry();
@@ -130,6 +158,7 @@
 
         const cube = new THREE.Mesh(geometry, material);
         cube.position.x = (i - 2) * 2;
+        cube.position.y = 8;
         cube.castShadow = true;
         cube.receiveShadow = true;
         scene.add(cube);
@@ -144,18 +173,79 @@
     plane.receiveShadow = true;
     scene.add(plane);
 
+    const wallGeometry = new THREE.PlaneGeometry(50, 50);
+    const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+    const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+    wall.position.set(10, 0, 0);      // Move it to the right
+    wall.rotation.y = -Math.PI / 2;   // Turn it to face left
+    wall.receiveShadow = true;
+    scene.add(wall);
+
     const gltfLoader = new GLTFLoader();
+
+
     gltfLoader.load(
-        './Avocado.glb',
-        (gltf) => {
-        const avocado = gltf.scene;
-        avocado.position.set(0, 1, 0);
-        avocado.scale.set(10, 10, 10);
-        scene.add(avocado);
-        },
-        undefined,
-        (error) => console.error('Error loading GLB:', error)
+    'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/CesiumMan/glTF/CesiumMan.gltf', 
+    (gltf) => {
+        const duck = gltf.scene;
+        duck.position.set(0, 0, 10);
+        //s duck.scale.set(3.02, 3.02, 3.02);
+        duck.castShadow = true;
+        scene.add(duck);
+    },
+    undefined,
+    (error) => console.error('Error loading Duck.glb:', error)
     );
+
+    gltfLoader.load(
+    'https://threejs.org/examples/models/gltf/RobotExpressive/RobotExpressive.glb',
+    (gltf) => {
+        const robot = gltf.scene;
+        robot.position.set(4, 0, 10);
+        robot.scale.set(0.5, 0.5, 0.5);
+        robot.castShadow = true;
+        scene.add(robot);
+    },
+    undefined,
+    (error) => console.error('Error loading Robot.glb:', error)
+    );
+
+    const treeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+    const treeTopMat = new THREE.MeshStandardMaterial({ color: 0x2e8b57 });
+    const waterMat = new THREE.MeshStandardMaterial({ color: 0x1ca3ec, transparent: true, opacity: 0.6, metalness: 0.3, roughness: 0.4 });
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+    
+    // Redwood Trees
+    for (let x = -10; x <= 10; x += 5) {
+    for (let z = -10; z <= 5; z += 5) {
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 6), treeTrunkMat);
+        const foliage = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 12), treeTopMat);
+        trunk.position.set(x, 1, z);
+        foliage.position.set(x, 4.5, z);
+        trunk.castShadow = true;
+        foliage.castShadow = true;
+        scene.add(trunk);
+        scene.add(foliage);
+    }
+    }
+    // Rocks and Logs in Clearing
+    for (let i = 0; i < 6; i++) {
+    const rock = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 10), rockMat);
+    rock.position.set(Math.random() * 8 - 4, -2, Math.random() * 8 - 4);
+    rock.scale.y = 0.6;
+    rock.castShadow = true;
+    scene.add(rock);
+    }
+
+    // Driftwood Logs (horizontal cylinders)
+    for (let i = 0; i < 4; i++) {
+    const log = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 3, 12), treeTrunkMat);
+    log.rotation.z = Math.PI / 2;
+    log.position.set(Math.random() * 8 - 4, -1.9, Math.random() * 8 - 4);
+    log.castShadow = true;
+    scene.add(log);
+    }
+
 
     function animate(time) {
         time *= 0.001;
@@ -175,6 +265,105 @@
         renderer.render(scene, camera);
         requestAnimationFrame(animate);
     }
+
+    const bearBasePos = new THREE.Vector3(0, 0.3, 6);
+    const brownMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21 });
+    const blackMat = new THREE.MeshStandardMaterial({ color: 0x000000 });
+    const bearBody = new THREE.Mesh(new THREE.SphereGeometry(1.2, 16, 16), brownMat);
+    bearBody.position.copy(bearBasePos.clone().add(new THREE.Vector3(0, -1.2, 0)));
+    scene.add(bearBody);
+
+    const bearHead = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 16), brownMat);
+    bearHead.position.copy(bearBasePos.clone().add(new THREE.Vector3(1.2, -0.6, 0)));
+    scene.add(bearHead);
+
+    const leftEar = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 12), brownMat);
+    leftEar.position.copy(bearBasePos.clone().add(new THREE.Vector3(1.4, 0.2, 0.5)));
+    const rightEar = leftEar.clone();
+    rightEar.position.z = bearBasePos.z - 0.5;
+    scene.add(leftEar);
+    scene.add(rightEar);
+
+    for (let i = -1; i <= 1; i += 2) {
+    for (let j = -1; j <= 1; j += 2) {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.6, 12), brownMat);
+        leg.position.set(
+        bearBasePos.x + i * 0.6,
+        bearBasePos.y - 2,
+        bearBasePos.z + j * 0.5
+        );
+        scene.add(leg);
+    }
+    }
+
+    const snout = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.5, 12), brownMat);
+    snout.rotation.x = Math.PI / 2;
+    snout.position.copy(bearBasePos.clone().add(new THREE.Vector3(1.9, -0.6, 0)));
+    scene.add(snout);
+
+    const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8), blackMat);
+    leftEye.position.copy(bearBasePos.clone().add(new THREE.Vector3(1.4, -0.4, 0.25)));
+    const rightEye = leftEye.clone();
+    rightEye.position.z = bearBasePos.z - 0.25;
+    scene.add(leftEye);
+    scene.add(rightEye);
+
+    
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), blackMat);
+    nose.position.copy(bearBasePos.clone().add(new THREE.Vector3(2.15, -0.6, 0)));
+    scene.add(nose);
+
+    let isDay = true;
+
+    // Save default values
+    const daySkybox = loaderCube.load([
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/posx.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/negx.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/posy.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/negy.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/posz.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/cube/Bridge2/negz.jpg',
+    ]);
+
+// const nightSkybox = loaderCube.load([
+//   'https://raw.githubusercontent.com/mrdoob/three.js/examples/textures/cube/MilkyWay/px.jpg',
+// //   'https://raw.githubusercontent.com/mrdoob/three.js/examples/textures/cube/MilkyWay/dark-s_nx.jpg',
+//   'https://raw.githubusercontent.com/mrdoob/three.js/19816c7ec422efde9f21afbabb504236da3a3325/examples/textures/cube/MilkyWay/dark-s_nx.jpg',
+//   'https://raw.githubusercontent.com/mrdoob/three.js/examples/textures/cube/MilkyWay/py.jpg',
+//   'https://raw.githubusercontent.com/mrdoob/three.js/examples/textures/cube/MilkyWay/ny.jpg',
+//   'https://raw.githubusercontent.com/mrdoob/three.js/examples/textures/cube/MilkyWay/pz.jpg',
+//   'https://raw.githubusercontent.com/mrdoob/three.js/examples/textures/cube/MilkyWay/nz.jpg',
+// ]);
+
+    const nightSkybox = loaderCube.load([
+    'https://raw.githubusercontent.com/mrdoob/three.js/19816c7ec422efde9f21afbabb504236da3a3325/examples/textures/cube/MilkyWay/dark-s_px.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/19816c7ec422efde9f21afbabb504236da3a3325/examples/textures/cube/MilkyWay/dark-s_nx.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/19816c7ec422efde9f21afbabb504236da3a3325/examples/textures/cube/MilkyWay/dark-s_py.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/19816c7ec422efde9f21afbabb504236da3a3325/examples/textures/cube/MilkyWay/dark-s_ny.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/19816c7ec422efde9f21afbabb504236da3a3325/examples/textures/cube/MilkyWay/dark-s_pz.jpg',
+    'https://raw.githubusercontent.com/mrdoob/three.js/19816c7ec422efde9f21afbabb504236da3a3325/examples/textures/cube/MilkyWay/dark-s_nz.jpg',
+    ]);
+
+
+
+    document.getElementById('toggleTime').addEventListener('click', () => {
+    isDay = !isDay;
+
+    if (isDay) {
+        scene.background = daySkybox;
+        light.intensity = 1;
+        ambient.intensity = 0.5;
+        spotLight.intensity = 2;
+        hemiLight.intensity = 0.5;
+    } else {
+        scene.background = nightSkybox;
+        light.intensity = 0.2;
+        ambient.intensity = 0.1;
+        spotLight.intensity = 0.5;
+        hemiLight.intensity = 0.1;
+    }
+    });
+
 
     animate();
 

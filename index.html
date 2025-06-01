@@ -48,11 +48,10 @@
     for (let i = 0; i < 5; i++) {
       let material;
 
-      if (i === 2) {
+      if (i === 1) {
         // Middle cube gets the texture
         material = new THREE.MeshStandardMaterial({ map: texture });
       } else if (i === 3) {
-        // Middle cube gets 6 different face textures
         const faceUrls = [
             'https://threejs.org/manual/examples/resources/images/flower-1.jpg',
             'https://threejs.org/manual/examples/resources/images/flower-2.jpg',
@@ -92,19 +91,21 @@
       requestAnimationFrame(animate);
     }
 
-    const gltfLoader = new GLTFLoader();
-
-    gltfLoader.load(
+    const Gloader =new GLTFLoader();
+    Gloader.load(
     './Avocado.glb',
     (gltf) => {
-        const model = gltf.scene;
-        model.position.set(0, 0, 0); 
-        model.scale.set(5, 5, 5); 
-        scene.add(model);
+        const avocado = gltf.scene;
+        avocado.position.set(0, 1, 0);
+        avocado.scale.set(10, 10, 10); // Bigger
+        scene.add(avocado);
+        console.log('Avocado model added:', avocado);
     },
-    undefined,
+    (xhr) => {
+        console.log(`Loading: ${(xhr.loaded / xhr.total * 100).toFixed(2)}% loaded`);
+    },
     (error) => {
-        console.error('An error occurred while loading the GLB model:', error);
+        console.error('Failed to load GLB model:', error);
     }
     );
 
